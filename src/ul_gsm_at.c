@@ -5,8 +5,11 @@
  *      Author: qwer
  */
 
+
+#include <stdlib.h>
 #include "ul_s.h"
 #include "ul_gsm_at.h"
+
 
 u8
 at_reply_ok (u8 *s, u16 len)
@@ -56,9 +59,9 @@ at_reply_check_ok (u8 *s)
 void
 at_tx_cmd (u8 n, const char *cmd)
 {
-    uart_rx_reset (n);
+/*    uart_rx_reset (n);
     uart_tx_c (n, 'A');
     uart_tx_c (n, 'T');
     uart_tx_s (n, cmd);
-    uart_tx_c (n, '\r');
+    uart_tx_c (n, '\r');*/
 }

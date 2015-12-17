@@ -8,19 +8,26 @@
 #ifndef GSM_PDU_H_
 #define GSM_PDU_H_
 
+#include "ul_other.h"
 
 // data coding scheme
 enum {PDU_DCS_7=0, PDU_DCS_8=0x4, PDU_DCS_UCS2=0x08, PDU_DCS_AUTO=0xFF};
 // number format
 enum {PDU_TYPE_NATIONAL=161, PDU_TYPE_INTERNATIONAL=145, PDU_TYPE_NETWORK=177};
 
+struct smsc_struct { u8 len, bytes, type, data[14]; };
+
+struct sender_struct { u8 len, bytes, type, data[14]; };
+
+struct msg_struct { u16 len, bytes; u8 *data; };
+
 struct pdu_struct {
 	// SMSC number
-	struct{ u8 len, bytes, type, data[14]; } smsc;
+	struct smsc_struct smsc;
 	// caller/sender number
-	struct{	u8 len, bytes, type, data[14]; } sender;
+	struct sender_struct sender;
 	// input/output zero-terminated message (7bit/8bit/UTF8)
-	struct{ u16 len, bytes; u8 *data; } msg;
+	struct msg_struct msg;
 
 	u8 first;      // 1st octet of the SMS-SUBMIT message (0x11)
 	u8 tp_msg_ref; // TP-Message-Reference. The "00" value here lets the phone set the message  reference number itself

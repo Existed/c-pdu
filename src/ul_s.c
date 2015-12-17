@@ -5,8 +5,9 @@
  *      Author: qwer
  */
 
+#include <stdlib.h>
 #include "ul_s.h"
-#include "ul_math_bcd.h"
+//#include "ul_math_bcd.h"
 
 u8
 utf8_to_ucs2 (u8 *in, u16 *out, u8 be)
@@ -334,7 +335,7 @@ s_append_h32 (u8 *out, u32 n)
     out = s_append_h16 (out, n);
     return out;
 }
-u8 *
+/*u8 *
 s_append_u32 (u8 *out, u32 n)
 {
     if (n)
@@ -366,4 +367,4 @@ s_append_s32 (u8 *out, s32 n)
         n = -n;
     }
     return s_append_u32 (out, n);
-}
+}*/

@@ -8,6 +8,8 @@
 #ifndef UL_S_H_
 #define UL_S_H_
 
+#include "ul_other.h"
+
 // convert UTF8 to UCS2 codepoint, returns number of bytes processed, be=1 for big-endian
 u8 utf8_to_ucs2(u8 *in, u16 *out, u8 be);
 // convert string in UTF8 to UCS2, returns number of UCS code points, be=1 for big-endian

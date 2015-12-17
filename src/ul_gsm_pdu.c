@@ -6,6 +6,7 @@
  */
 
 #include "ul_gsm_pdu.h"
+#include "ul_s.h"
 
 u8
 pdu_7to8 (u8 *a, u8 len)
@@ -13,14 +14,15 @@ pdu_7to8 (u8 *a, u8 len)
     //'123456789abc' -> 31 D9 8C 56 B3 DD 70 B9 B0 78 OC
     //'hellohello'   -> E8 32 9B FD 46 97 D9 EC 37
     //'Hello!'       -> C8 32 9B FD 0E 01
+    u8 i1, i2;
     if (len == 0) len = s_len (a, 0);
     a[len] = 0;
     len++;
     if (len > 0)
     {
-        for (u8 i1 = 0; i1 < (len - 2); i1++)
+        for (i1 = 0; i1 < (len - 2); i1++)
         {
-            for (u8 i2 = (len - 1); i2 > i1; i2--)
+            for (i2 = (len - 1); i2 > i1; i2--)
             {
                 a[i2 - 1] = a[i2 - 1] | ((a[i2] & 1) ? 0x80 : 0);
                 a[i2] >>= 1;
@@ -33,16 +35,17 @@ pdu_7to8 (u8 *a, u8 len)
 u8
 pdu_8to7 (u8 *a, u8 len)
 {
+    u8 i1, i2, i;
     u8 len1 = len + (len >> 3);
     while (len < len1)
         a[len++] = 0;
     if (len > 0)
     {
-        for (u8 i1 = 0; i1 < (len1 - 1); i1++)
-            for (u8 i2 = (len1 - 1); i2 > i1; i2--)
+        for (i1 = 0; i1 < (len1 - 1); i1++)
+            for (i2 = (len1 - 1); i2 > i1; i2--)
                 a[i2] = (a[i2] << 1) | !!(a[i2 - 1] & 0x80);
     }
-    for (u8 i = 0; i < len1; i++)
+    for (i = 0; i < len1; i++)
         a[i] &= 0x7F;
     return len1;
 }
@@ -99,6 +102,8 @@ pdu_bytes2hex (u8 *b, u16 len, u8 *h)
 void
 pdu_in_decode (u8 *in, u16 len, struct pdu_struct *out)
 {
+    u8 i;
+
     if (len == 0) len = s_len (in, 0);
 
     pdu_hex2bytes (in, len, in);
@@ -109,7 +114,7 @@ pdu_in_decode (u8 *in, u16 len, struct pdu_struct *out)
     if (in[0] == 7)
     {
         out->smsc.type = in[1];
-        for (u8 i = 0; i < (out->smsc.bytes); i++)
+        for (i = 0; i < (out->smsc.bytes); i++)
             out->smsc.data[i] = in[i + 2];
     }
 
@@ -119,7 +124,7 @@ pdu_in_decode (u8 *in, u16 len, struct pdu_struct *out)
     out->sender.len = *in++;
     out->sender.bytes = (out->sender.len + (out->sender.len & 1)) >> 1;
     out->sender.type = *in++;
-    for (u8 i = 0; i < ((out->sender.len + (out->sender.len & 1)) >> 1); i++)
+    for (i = 0; i < ((out->sender.len + (out->sender.len & 1)) >> 1); i++)
         out->sender.data[i] = *in++;
 
     out->tp_pid = *in++;
@@ -143,6 +148,8 @@ pdu_in_decode (u8 *in, u16 len, struct pdu_struct *out)
 u16
 pdu_in_decode_text (u8 *in, u16 in_bytes, u8 in_dcs, u8 *out)
 {
+    u8 i;
+
     if (in_dcs == PDU_DCS_UCS2)
     {
         in_bytes = s_ucs2_to_utf8 ((u16 *) in, in_bytes >> 1, out, 1);
@@ -155,7 +162,7 @@ pdu_in_decode_text (u8 *in, u16 in_bytes, u8 in_dcs, u8 *out)
             in_bytes += in_bytes >> 3;
             pdu_8to7 (in, in_bytes);
         }
-        for (u8 i = 0; i < in_bytes; i++)
+        for (i = 0; i < in_bytes; i++)
             *out++ = *in++;
     }
     *out = 0;
@@ -165,13 +172,14 @@ pdu_in_decode_text (u8 *in, u16 in_bytes, u8 in_dcs, u8 *out)
 u16
 pdu_out_encode (struct pdu_struct *in, u8 *out)
 {
+    u8 i;
     u16 len = 1;
     *out++ = in->smsc.len;
     // fill SMSC data
     if (in->smsc.len)
     {
         *out++ = in->smsc.type;
-        for (u8 i = 0; i < (in->smsc.len - 1); i++)
+        for (i = 0; i < (in->smsc.len - 1); i++)
             *out++ = in->smsc.data[i];
         len = in->smsc.len;
     }
@@ -182,7 +190,7 @@ pdu_out_encode (struct pdu_struct *in, u8 *out)
     in->sender.len = pdu_phone_digits (in->sender.data, in->sender.bytes);
     *out++ = in->sender.len;  // address length, digits
     *out++ = in->sender.type; // type-of-address
-    for (u8 i = 0; i < in->sender.bytes; i++)
+    for (i = 0; i < in->sender.bytes; i++)
         *out++ = in->sender.data[i];
 
     *out++ = in->tp_pid;      // TP-PID. Protocol identifier
@@ -241,7 +249,7 @@ pdu_out_encode_simple (struct pdu_struct *pdu, u8 *out, void *sender, void *msg,
     else
         pdu_phone_pack ((u8 *) sender, pdu->sender.data);
 
-    pdu->tp_dcs = PDU_DCS_AUTO;
+    pdu->tp_dcs = PDU_DCS_7;
     pdu->msg.data = (u8 *) msg;
 
     pdu_out_encode (pdu, out);

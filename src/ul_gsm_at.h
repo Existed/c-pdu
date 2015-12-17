@@ -8,6 +8,11 @@
 #ifndef GSM_AT_H_
 #define GSM_AT_H_
 
+#include "ul_other.h"
+
+extern u16 s_len (u8 *s, u8 eol);
+extern u8  s_lines (u8 *s, u16 len, u8 eol);
+
 // get length of reply
 inline u16 at_reply_len(u8 *s){ return s_len(s,0); }
 // get number of lines in reply
