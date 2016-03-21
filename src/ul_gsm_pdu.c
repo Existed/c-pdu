@@ -249,7 +249,7 @@ pdu_out_encode_simple (struct pdu_struct *pdu, u8 *out, void *sender, void *msg,
     else
         pdu_phone_pack ((u8 *) sender, pdu->sender.data);
 
-    pdu->tp_dcs = PDU_DCS_7;
+    pdu->tp_dcs = PDU_DCS_UCS2;//PDU_DCS_7;
     pdu->msg.data = (u8 *) msg;
 
     pdu_out_encode (pdu, out);
@@ -340,4 +340,34 @@ pdu_phone_copy (u8 *in, u8 *out)
     while (*in != eop)
         *out++ = *in++;
     *out = eop;
+}
+
+
+u16
+pdu_out_encode_sm (struct pdu_struct *pdu, u8 *out, void *smsc, void *sender, void *msg,
+                       u8 tp_vp)
+{
+    pdu->first = 0x11;
+    pdu->tp_msg_ref = 0;
+    pdu->tp_pid = 0;
+    pdu->tp_vp = (tp_vp == 0) ? 0xAA : tp_vp;
+
+    pdu->smsc.type = PDU_TYPE_INTERNATIONAL;
+    if (pdu_phone_is_packed ((u8 *) smsc))
+        pdu_phone_copy ((u8 *) smsc, pdu->smsc.data);
+    else
+        pdu_phone_pack ((u8 *) smsc, pdu->smsc.data);
+
+    pdu->sender.type = PDU_TYPE_INTERNATIONAL;
+    if (pdu_phone_is_packed ((u8 *) sender))
+        pdu_phone_copy ((u8 *) sender, pdu->sender.data);
+    else
+        pdu_phone_pack ((u8 *) sender, pdu->sender.data);
+
+    pdu->tp_dcs = PDU_DCS_7;
+    pdu->msg.data = (u8 *) msg;
+
+    pdu_out_encode (pdu, out);
+
+    return pdu->len_bytes;
 }
